@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Aluno</title>
+<style>
+body { font-family: Arial, sans-serif; background-color: #f4f4f9; padding:
+20px; }
+.container { max-width: 600px; margin: auto; background: white; padding: 20px;
+border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+h1 { color: #333; text-align: center; }
+.form-group { display: flex; gap: 10px; margin-bottom: 20px; }
+input, select, button { padding: 10px; font-size: 16px; border: 1px solid #ccc;
+border-radius: 4px; }
+input, select { flex: 1; }
+button { background-color: #28a745; color: white; border: none; cursor:
+pointer; }
+button:hover { background-color: #218838; }
+.btn-delete { background-color: #dc3545; padding: 5px 10px; font-size: 14px;
+margin-left: 10px; }
+.btn-delete:hover { background-color: #c82333; }
+ul { list-style: none; padding: 0; }
+
+li { background: #eee; margin: 10px 0; padding: 15px; border-radius: 4px;
+display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>© Portal de Aplicações Web</h1>
+<!-- Formulário de Cadastro -->
+<div class="form-group">
+<input type="text" id="inputNome" placeholder="Nome do Aluno" required>
+<select id="selectCurso">
+<option value="Aplicações WEB">Aplicações WEB</option>
+<option value="Framework Front End">Framework Front End</option>
+</select>
+<button onclick="cadastrarAluno()">Cadastrar</button>
+</div>
+<hr>
+<!-- Lista onde os alunos aparecerão -->
+<h2>Alunos Matriculados:</h2>
+<ul id="listaAlunos">
+<!-- Os alunos serão injetados aqui via JavaScript -->
+</ul>
+</div>
+<!-- Nosso cérebro do Front-end -->
+<script src="app.js"></script>
+</body>
+</html>
