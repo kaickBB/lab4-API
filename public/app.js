@@ -26,3 +26,39 @@ li.innerHTML = `
 DOM.lista.appendChild(li);
 });
 }
+// === EVENT DELEGATION ===
+// Um único ouvinte na Lista (elemento pai) intercepta os cliques dos botões filhos
+DOM.lista.addEventListener('click', function(evento) {
+// Verifica se o elemento clicado (target) tem a classe 'btn-delete'
+if (evento.target.classList.contains('btn-delete')) {
+// Puxa o ID que guardamos no atributo 'data-id'
+const id = evento.target.getAttribute('data-id');
+deletarAluno(id);
+}
+});
+// Evento do botão de cadastro
+DOM.btnCadastrar.addEventListener('click', cadastrarAluno);
+// === COMUNICAÇÃO COM O BACK-END ===
+function carregarAlunos() {
+// Chamaremos nossa nova rota de simulação de pipeline (Criada na Fase 4)
+fetch('/api/alunos/pipeline-simulador')
+.then(resposta => {
+if(!resposta.ok) throw new Error("Falha no servidor. Código: " + resposta.status);
+return resposta.json();
+
+})
+.then(dados => {
+DOM.alerta.classList.add('d-none'); // Esconde o alerta de erro
+estadoApp.alunos = dados; // Elevação de Estado: Atualiza o objeto central
+renderizarTela(); // Renderiza a partir do estado atualizado
+})
+.catch(erro => exibirErro("Falha em Cascata detectada: " + erro.message));
+}
+function exibirErro(mensagem) {
+DOM.alerta.textContent = mensagem;
+DOM.alerta.classList.remove('d-none');
+}
+// Inicializa a aplicação
+carregarAlunos();
+// (Mantenha as funções cadastrarAluno() e deletarAluno() do laboratório 2,
+// apenas certificando-se de chamar carregarAlunos() no sucesso)
