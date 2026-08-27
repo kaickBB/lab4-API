@@ -1,3 +1,22 @@
+function cadastrarAluno() {
+    const nome = DOM.inputNome.value.trim();
+    const curso = DOM.selectCurso.value;
+    
+    if (!nome) return alert("Preencha o nome do aluno.");
+
+    // Exemplo de atualização local rápida
+    const novoAluno = { id: Date.now().toString(), nome, curso };
+    estadoApp.alunos.push(novoAluno);
+    renderizarTela();
+
+    DOM.inputNome.value = '';
+}
+
+function deletarAluno(id) {
+    // Remove o aluno do estado e atualiza a interface
+    estadoApp.alunos = estadoApp.alunos.filter(aluno => aluno.id != id);
+    renderizarTela();
+}
 // === LIFTING STATE UP: O Estado Global da Aplicação ===
 const estadoApp = {
 alunos: [], // Guarda a lista de alunos na memória do navegador

@@ -48,7 +48,28 @@ id_gerado: this.lastID
 });
 });
 });
+// === SIMULADOR DE FALHAS EM CASCATA (PIPELINE DO BANCO) ===
+// Esta rota simula um banco de dados sob estresse (gargalo de CPU ou Locks de transação)
+app.get('/api/alunos/pipeline-simulador', (request, response) => {
+// Sorteia um número de 1 a 10
+const chanceDeFalha = Math.floor(Math.random() * 10) + 1;
+// Simula um atraso de rede ou processamento lento (1.5 segundos)
+setTimeout(() => {
+if (chanceDeFalha <= 3) {
+// Em 30% dos casos, o banco "cai" e quebra o pipeline
+// O código HTTP 503 indica "Serviço Indisponível" (Internal Error / Cascading Failure)
 
+return response.status(503).json({
+erro: "Cascading Failure: O pool de conexões do Banco de Dados esgotou."
+});
+}
+// Se sobreviveu à falha, processa a requisição normalmente
+db.all(`SELECT * FROM alunos`, [], (erro, linhas) => {
+if (erro) return response.status(500).json({ erro: erro.message });
+response.status(200).json(linhas);
+});
+}, 1500); // 1500ms de atraso intencional
+});
 // Rota de busca de alunos (GET)
 app.get('/api/alunos', (request, response) => {
 const sql = `SELECT * FROM alunos`;
