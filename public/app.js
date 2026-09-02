@@ -1,83 +1,99 @@
-function cadastrarAluno() {
-    const nome = DOM.inputNome.value.trim();
-    const curso = DOM.selectCurso.value;
-    
-    if (!nome) return alert("Preencha o nome do aluno.");
-
-    // Exemplo de atualização local rápida
-    const novoAluno = { id: Date.now().toString(), nome, curso };
-    estadoApp.alunos.push(novoAluno);
-    renderizarTela();
-
-    DOM.inputNome.value = '';
-}
-
-function deletarAluno(id) {
-    // Remove o aluno do estado e atualiza a interface
-    estadoApp.alunos = estadoApp.alunos.filter(aluno => aluno.id != id);
-    renderizarTela();
-}
-// === LIFTING STATE UP: O Estado Global da Aplicação ===
-const estadoApp = {
-alunos: [], // Guarda a lista de alunos na memória do navegador
-carregando: false // Indica se estamos aguardando o Back-end
-};
-// === MANIPULAÇÃO DE OBJETOS DO HTML ===
+// === 2.4.6 DOM (Document Object Model) ===
+// Capturando os elementos estruturais da tela
 const DOM = {
 lista: document.getElementById('listaAlunos'),
 inputNome: document.getElementById('inputNome'),
 selectCurso: document.getElementById('selectCurso'),
 btnCadastrar: document.getElementById('btnCadastrar'),
-alerta: document.getElementById('alertaSistema')
+alerta: document.getElementById('alertaSistema'),
+metricaTotal: document.getElementById('metricaTotal'),
+relogio: document.getElementById('relogioSistema')
 };
-// Função unificada para renderizar a tela baseada no estadoApp
-function renderizarTela() {
-
+// Estado Centralizado
+const estadoApp = { alunos: [] };
+// === 2.4.3 Interações: Relógio em Tempo Real ===
+setInterval(() => {
+const agora = new Date();
+DOM.relogio.textContent = agora.toLocaleTimeString('pt-BR');
+}, 1000);
+// === RENDERIZAÇÃO E ATUALIZAÇÃO DO DASHBOARD ===
+const renderizarDashboard = () => {
 DOM.lista.innerHTML = '';
+// Atualiza a Métrica (Contador Dinâmico)
+DOM.metricaTotal.textContent = estadoApp.alunos.length;
+// Constrói as linhas da Tabela (Objetos HTML)
 estadoApp.alunos.forEach(aluno => {
-const li = document.createElement('li');
-li.className = "list-group-item d-flex justify-content-between align-items-center";
-// Note que removemos o onclick="deletarAluno()" daqui!
-li.innerHTML = `
-<span><strong>${aluno.nome}</strong> - ${aluno.curso}</span>
-<button class="btn btn-danger btn-sm btn-delete" data-id="${aluno.id}">Remover</button>
+const tr = document.createElement('tr');
+
+tr.className = "linha-nova"; // Dispara a animação CSS ao nascer
+tr.innerHTML = `
+<td class="fw-bold text-secondary">#${aluno.id}</td>
+<td>${aluno.nome}</td>
+<td><span class="badge bg-info text-dark">${aluno.curso}</span></td>
+<td class="text-end">
+<button class="btn btn-outline-danger btn-sm btn-delete" data-id="${aluno.id}">
+✖ Excluir
+</button>
+</td>
 `;
-DOM.lista.appendChild(li);
+DOM.lista.appendChild(tr);
+// Remove a cor de "novo" após 2 segundos
+setTimeout(() => tr.classList.remove('linha-nova'), 2000);
 });
 }
-// === EVENT DELEGATION ===
-// Um único ouvinte na Lista (elemento pai) intercepta os cliques dos botões filhos
-DOM.lista.addEventListener('click', function(evento) {
-// Verifica se o elemento clicado (target) tem a classe 'btn-delete'
+// === 2.4.5 Manipulação de Eventos (Event Delegation) ===
+DOM.lista.addEventListener('click', (evento) => {
 if (evento.target.classList.contains('btn-delete')) {
-// Puxa o ID que guardamos no atributo 'data-id'
 const id = evento.target.getAttribute('data-id');
 deletarAluno(id);
 }
 });
-// Evento do botão de cadastro
 DOM.btnCadastrar.addEventListener('click', cadastrarAluno);
-// === COMUNICAÇÃO COM O BACK-END ===
+// === INTEGRAÇÃO COM BACK-END (Funções) ===
 function carregarAlunos() {
-// Chamaremos nossa nova rota de simulação de pipeline (Criada na Fase 4)
 fetch('/api/alunos/pipeline-simulador')
 .then(resposta => {
-if(!resposta.ok) throw new Error("Falha no servidor. Código: " + resposta.status);
+if(!resposta.ok) throw new Error("Falha Crítica no Banco de Dados (503).");
 return resposta.json();
-
 })
 .then(dados => {
-DOM.alerta.classList.add('d-none'); // Esconde o alerta de erro
-estadoApp.alunos = dados; // Elevação de Estado: Atualiza o objeto central
-renderizarTela(); // Renderiza a partir do estado atualizado
+DOM.alerta.classList.add('d-none');
+estadoApp.alunos = dados;
+renderizarDashboard();
 })
-.catch(erro => exibirErro("Falha em Cascata detectada: " + erro.message));
-}
-function exibirErro(mensagem) {
-DOM.alerta.textContent = mensagem;
+.catch(erro => {
+
+DOM.alerta.textContent = erro.message;
 DOM.alerta.classList.remove('d-none');
+});
 }
-// Inicializa a aplicação
+// 2.4.4 Funções: Cadastro
+function cadastrarAluno() {
+const novoAluno = {
+nome: DOM.inputNome.value,
+curso: DOM.selectCurso.value
+};
+if(!novoAluno.nome) return alert("O nome é obrigatório!");
+fetch('/api/alunos', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify(novoAluno)
+})
+.then(resposta => {
+if(resposta.status === 201) {
+DOM.inputNome.value = "";
+carregarAlunos(); // Recarrega e atualiza as métricas
+}
+});
+}
+// 2.4.4 Funções: Exclusão
+const deletarAluno = (id) => {
+if(confirm("Confirmar exclusão definitiva?")) {
+fetch(`/api/alunos/${id}`, { method: 'DELETE' })
+.then(resposta => {
+if(resposta.status === 200) carregarAlunos();
+});
+}
+}
+// Inicializa a aplicação ao abrir
 carregarAlunos();
-// (Mantenha as funções cadastrarAluno() e deletarAluno() do laboratório 2,
-// apenas certificando-se de chamar carregarAlunos() no sucesso)
