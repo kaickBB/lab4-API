@@ -6,8 +6,7 @@ fetch('/api/alunos/estatisticas')
 .then(resposta => resposta.json())
 .then(dados => {
 // "dados" virá do SQLite assim: [{ curso: 'Aplicações WEB', quantidade: 5 }, ...]
-// Separamos os nomes dos cursos (Labels) e as quantidades (Data) usando o
-método .map()
+// Separamos os nomes dos cursos (Labels) e as quantidades (Data) usando o método .map()
 const labelsCursos = dados.map(item => item.curso);
 const dadosQuantidades = dados.map(item => item.quantidade);
 // Instanciação do Gráfico (Chart.js)
