@@ -1,5 +1,6 @@
 const express = require('express');
 const sqlite3 = require('sqlite3').verbose(); // Corrigido: importação do sqlite3
+// teste sinc
 
 const app = express();
 const PORT = 3000;
