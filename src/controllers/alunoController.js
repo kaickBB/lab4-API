@@ -6,34 +6,16 @@ if (erro) return res.status(500).json({ erro: erro.message });
 res.status(200).json(linhas);
 });
 },
-estatisticas: (req, res) => {
-AlunoRepository.contarPorCurso((erro, linhas) => {
-if (erro) return res.status(500).json({ erro: erro.message });
-res.status(200).json(linhas);
-});
-},
-// Mantém a rota do Lab 4/5 para o Front-end não quebrar
-simularPipeline: (req, res) => {
-const chanceDeFalha = Math.floor(Math.random() * 10) + 1;
-setTimeout(() => {
-if (chanceDeFalha <= 3) {
-return res.status(503).json({ erro: "Cascading Failure: O pool de conexões do Banco esgotou." });
-}
-AlunoRepository.buscarTodos((erro, linhas) => {
-if (erro) return res.status(500).json({ erro: erro.message });
-res.status(200).json(linhas);
-
-});
-}, 1500);
-},
 cadastrar: (req, res) => {
 const { nome, curso } = req.body;
-if (!nome || !curso) return res.status(400).json({ erro: "Nome e curso são obrigatórios!" });
+
+if (!nome || !curso) return res.status(400).json({ erro: "Dados incompletos!" });
 AlunoRepository.criar(nome, curso, (erro, id) => {
 if (erro) return res.status(500).json({ erro: erro.message });
 res.status(201).json({ mensagem: "Criado!", id });
 });
 },
+// NOVIDADE: Método para lidar com o PUT
 editar: (req, res) => {
 const id = req.params.id;
 const { nome, curso } = req.body;
@@ -50,6 +32,12 @@ if (erro) return res.status(500).json({ erro: erro.message });
 if (apagados === 0) return res.status(404).json({ erro: "Aluno não encontrado." });
 res.status(200).json({ mensagem: "Removido!" });
 });
-}
+},
+estatisticas: (req, res) => {
+AlunoRepository.contarPorCurso((erro, linhas) => {
+if (erro) return res.status(500).json({ erro: erro.message });
+res.status(200).json(linhas);
+});
+},
 };
 module.exports = AlunoController;

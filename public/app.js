@@ -11,6 +11,7 @@ relogio: document.getElementById('relogioSistema')
 };
 // Estado Centralizado
 const estadoApp = { alunos: [] };
+let idEdicao = null;
 // === 2.4.3 Interações: Relógio em Tempo Real ===
 setInterval(() => {
 const agora = new Date();
@@ -39,19 +40,49 @@ tr.innerHTML = `
 DOM.lista.appendChild(tr);
 // Remove a cor de "novo" após 2 segundos
 setTimeout(() => tr.classList.remove('linha-nova'), 2000);
+tr.innerHTML = `
+<td class="fw-bold text-secondary">#${aluno.id}</td>
+<td>${aluno.nome}</td>
+<td><span class="badge bg-info text-dark">${aluno.curso}</span></td>
+<td class="text-end">
+<!-- NOVO BOTÃO DE EDITAR -->
+<button class="btn btn-outline-warning btn-sm btn-edit me-2"
+data-id="${aluno.id}" data-nome="${aluno.nome}" data-curso="${aluno.curso}">
+✎ Editar
+</button>
+<button class="btn btn-outline-danger btn-sm btn-delete" data-id="${aluno.id}">
+✖ Excluir
+</button>
+</td>
+`;
 });
 }
 // === 2.4.5 Manipulação de Eventos (Event Delegation) ===
 DOM.lista.addEventListener('click', (evento) => {
+
+// Lógica de Deletar existente...
 if (evento.target.classList.contains('btn-delete')) {
 const id = evento.target.getAttribute('data-id');
 deletarAluno(id);
+}
+// NOVIDADE: Lógica de Editar
+if (evento.target.classList.contains('btn-edit')) {
+const id = evento.target.getAttribute('data-id');
+const nome = evento.target.getAttribute('data-nome');
+const curso = evento.target.getAttribute('data-curso');
+// Preenche o formulário com os dados do aluno clicado
+DOM.inputNome.value = nome;
+DOM.selectCurso.value = curso;
+idEdicao = id; // Marca que o formulário agora está em modo de edição
+// Muda a cor e texto do botão para dar feedback visual
+DOM.btnCadastrar.textContent = "Atualizar";
+DOM.btnCadastrar.classList.replace('btn-success', 'btn-warning');
 }
 });
 DOM.btnCadastrar.addEventListener('click', cadastrarAluno);
 // === INTEGRAÇÃO COM BACK-END (Funções) ===
 function carregarAlunos() {
-fetch('/api/alunos/pipeline-simulador')
+fetch('/api/alunos/')
 .then(resposta => {
 if(!resposta.ok) throw new Error("Falha Crítica no Banco de Dados (503).");
 return resposta.json();
@@ -69,20 +100,25 @@ DOM.alerta.classList.remove('d-none');
 }
 // 2.4.4 Funções: Cadastro
 function cadastrarAluno() {
-const novoAluno = {
-nome: DOM.inputNome.value,
-curso: DOM.selectCurso.value
-};
-if(!novoAluno.nome) return alert("O nome é obrigatório!");
-fetch('/api/alunos', {
-method: 'POST',
+const dados = { nome: DOM.inputNome.value, curso: DOM.selectCurso.value };
+if(!dados.nome) return alert("O nome é obrigatório!");
+// Se temos um idEdicao, a URL e o Método mudam (PUT). Se não, é POST.
+const url = idEdicao ? `/api/alunos/${idEdicao}` : '/api/alunos';
+const metodo = idEdicao ? 'PUT' : 'POST';
+fetch(url, {
+method: metodo,
 headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify(novoAluno)
+body: JSON.stringify(dados)
+
 })
 .then(resposta => {
-if(resposta.status === 201) {
+if(resposta.ok) {
+// Limpa o formulário e reseta o estado
 DOM.inputNome.value = "";
-carregarAlunos(); // Recarrega e atualiza as métricas
+idEdicao = null;
+DOM.btnCadastrar.textContent = "Adicionar";
+DOM.btnCadastrar.classList.replace('btn-warning', 'btn-success');
+carregarAlunos();
 }
 });
 }
